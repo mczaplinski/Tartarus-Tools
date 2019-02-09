@@ -1,3 +1,8 @@
+samples/
+User.kad
+
+## Python ignores:
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -70,6 +75,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+.ipynb_checkpoints/
 .ipynb_checkpoints
 
 # pyenv
@@ -87,6 +93,7 @@ celerybeat-schedule
 env/
 venv/
 ENV/
+my_venv/
 env.bak/
 venv.bak/
 
