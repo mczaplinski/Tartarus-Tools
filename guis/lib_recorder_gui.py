@@ -19,8 +19,17 @@ class LibRecorderGUI ( wx.Frame ):
     def __init__( self, parent ):
         wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Shurrikane Sample Library Recorder", pos = wx.DefaultPosition, size = wx.Size( 1400,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.RESIZE_BORDER|wx.TAB_TRAVERSAL )
 
-        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+        self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
         self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
+
+        self.m_menubar1 = wx.MenuBar( 0 )
+        self.m_menu3 = wx.Menu()
+        self.m_menuItem2 = wx.MenuItem( self.m_menu3, wx.ID_ANY, u"Audio Device Settings", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menu3.AppendItem( self.m_menuItem2 )
+
+        self.m_menubar1.Append( self.m_menu3, u"File" ) 
+
+        self.SetMenuBar( self.m_menubar1 )
 
         gSizer1 = wx.GridSizer( 3, 1, 0, 0 )
 
@@ -55,7 +64,7 @@ class LibRecorderGUI ( wx.Frame ):
         self.wxSamplePrefix = wx.TextCtrl( self, wx.ID_ANY, u"MyLibStacc", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxSamplePrefix, 0, wx.ALL, 5 )
 
-        self.wxSaveButton = wx.Button( self, wx.ID_ANY, u"Accept all changes", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxSaveButton = wx.Button( self, wx.ID_ANY, u"Accept changes and start Device", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxSaveButton, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
         self.wxRecordButton = wx.Button( self, wx.ID_ANY, u"Start Recording", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
@@ -63,10 +72,10 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer6.Add( self.wxRecordButton, 0, wx.ALL, 5 )
 
-        self.wxPreviewDryButton = wx.Button( self, wx.ID_ANY, u"Preview Dry 10 sec", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxPreviewDryButton = wx.Button( self, wx.ID_ANY, u"Preview Dry 5 sec", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxPreviewDryButton, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
-        self.wxPreviewWetButton = wx.Button( self, wx.ID_ANY, u"Preview Wet 10 sec", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxPreviewWetButton = wx.Button( self, wx.ID_ANY, u"Preview Wet 5 sec", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxPreviewWetButton, 0, wx.ALL, 5 )
 
 
@@ -144,7 +153,7 @@ class LibRecorderGUI ( wx.Frame ):
         self.wxInputMode.SetSelection( 0 )
         gSizer9.Add( self.wxInputMode, 0, wx.ALL, 5 )
 
-        self.m_staticText11 = wx.StaticText( self, wx.ID_ANY, u"From Note (C-2 ... G8)", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText11 = wx.StaticText( self, wx.ID_ANY, u"From Note (C-2 ... G8).", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticText11.Wrap( -1 )
         self.m_staticText11.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
 
@@ -422,6 +431,7 @@ class LibRecorderGUI ( wx.Frame ):
         self.Centre( wx.BOTH )
 
         # Connect Events
+        self.Bind( wx.EVT_MENU, self.onMenuAudioDeviceSettings, id = self.m_menuItem2.GetId() )
         self.wxSaveButton.Bind( wx.EVT_BUTTON, self.saveChangesFromGUI )
         self.wxRecordButton.Bind( wx.EVT_BUTTON, self.startRecording )
         self.wxPreviewDryButton.Bind( wx.EVT_BUTTON, self.previewDry )
@@ -447,6 +457,9 @@ class LibRecorderGUI ( wx.Frame ):
 
 
     # Virtual event handlers, overide them in your derived class
+    def onMenuAudioDeviceSettings( self, event ):
+        event.Skip()
+
     def saveChangesFromGUI( self, event ):
         event.Skip()
 

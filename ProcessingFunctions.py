@@ -1,6 +1,7 @@
 from enum import Enum
 import numpy as np
 import scipy
+import math
 import scipy.io.wavfile
 import scipy.signal
 import pyaudio
@@ -384,7 +385,123 @@ def limitSample(mono_data, valdB=-0.1): #valdB = limit in dB
     mono_data[mono_data>valFloat] = valFloat
     mono_data[mono_data<-valFloat] = -valFloat
     return mono_data    
+
+def getAllAudioDevices(): #will setup  new PyAudio handle
+    PYA = pyaudio.PyAudio()
+    pya_audio_devices = []
+    for i in range(0, PYA.get_device_count()):
+        pya_audio_devices.append("ID {} - {}".format(i,PYA.get_device_info_by_index(i).get('name')))
+    PYA.terminate()
+    return pya_audio_devices
+
+def openPYA():
+    PYA = pyaudio.PyAudio()
+    return PYA
+
+def closePYA(PYA):
+    PYA.terminate()
+
+def getOutputStream(PYA, output_device_id, numChannels, samplerate):
+    output_stream = PYA.open(format=pyaudio.paFloat32,
+                             channels=numChannels,
+                             rate=samplerate,
+                             output=True,
+                             output_device_index=output_device_id,
+                             start=False
+                             )
+    return output_stream
+def closeOutputStream(output_stream):
+    output_stream.close()
+    
+def getInputStream(PYA, input_device_id, numChannels, samplerate, blocksize):
+    try:
+        input_stream = PYA.open(
+            format=pyaudio.paInt16, #we record in int and convert it later to float because the resulting byte stream is broken af. idk man
+            channels=numChannels,
+            rate=samplerate,
+            input=True,
+            frames_per_buffer=blocksize,
+            input_device_index=input_device_id,
+            start=False
+        )
+        print("Could successfully open audio device!")
+        return input_stream
+    except:
+        #OSError not available
+        raise Exception("Error: Couldn't open audio device")
+
+def closeInputStream(input_stream):
+    input_stream.stop_stream()
+    input_stream.close()
+    
+def playAudio(np_audio, output_stream=None, output_device_id=0, numChannels=2, samplerate=44100):    
+    # Assuming you have a numpy array called np_audio
+    np_audio = np_audio.T #transform to other notation
+    bytedata = np_audio.astype(np.float32).tostring()
+    if output_stream is None:
+        PYA = openPYA()
+        output_stream = getOutputStream(PYA, output_device_id, numChannels, samplerate)
+        output_stream.start_stream()
+        output_stream.write(bytedata)
+        closeOutputStream(output_stream)
+        closePYA(PYA)
+    else:
+        output_stream.start_stream()
+        output_stream.write(bytedata)
+        output_stream.stop_stream()
+    
+def recordAudio(duration, input_stream=None, input_device_id=0, numChannels=2, samplerate=44100, blocksize=1024): #dur in sec
+    ownStream = not input_stream is None
+    if not ownStream:
+        print("getting device info")
+        PYA = pyaudio.PyAudio()
+        input_stream = getInputStream(PYA, input_device_id, numChannels, samplerate, blocksize)
         
+    input_stream.start_stream()
+    
+    frames = []
+    numBlocks = int(math.ceil(duration * samplerate / blocksize))
+    print("recording...")
+    for i in range(0, numBlocks):
+        data = input_stream.read(blocksize)
+        frames.append(data)
+        
+    if not ownStream:
+        closeInputStream(input_stream)
+        closePYA(PYA)
+    else:
+        input_stream.stop_stream()
+        
+    print("converting...")
+    
+    framesAll = b''.join(frames) #merged block list
+    result = np.fromstring(framesAll, dtype=np.int16) # [CH1 CH2 ...] concatenated
+    chunk_length = int(result.shape[0] / numChannels)
+    result = np.reshape(result, (chunk_length, numChannels))
+
+    if isMono(result):
+        result_float = convert_to_float(result, destination_type=numpy.float32)
+    else:
+        result_float = np.zeros(result.shape, dtype = numpy.float32);
+        for i in range(0,result.shape[1]):
+            result_float[:,i] = convert_to_float(result[:,i], destination_type=numpy.float32)[0]
+        #result_float = np.array(result_float)
+        #result_float = result_float.reshape(result_float.shape,order='A')
+        
+        #TODO find a fany solution for any amount of channels. indexing gets weird. somehow result_float[1] doesn't results in first channel like the loaded .wav files or the VSTi samples did.... wtf numpy
+        #if numChannels == 2:
+        #    return np.array([result_float[:,0], result_float[:,1]])
+        #if numChannels == 3:
+        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2]])
+        #if numChannels == 4:
+        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3]])
+        #if numChannels == 5:
+        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3], result_float[:,4]])
+        #if numChannels == 6:
+        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3], result_float[:,4], result_float[:,5]])
+    print("done...")
+    return result_float.T #transpose to numpy notation
+
 #def play_wav_file(filepath, block_size):
 #    PYA = pyaudio.PyAudio()
 #    wf = wave.open(filepath, 'rb') #read mode
