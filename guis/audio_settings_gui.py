@@ -17,7 +17,7 @@ import wx.xrc
 class AudioDeviceSettingsGUI ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Audio Device Settings", pos = wx.DefaultPosition, size = wx.Size( 800,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Tartarus Tools - Audio Device Settings", pos = wx.DefaultPosition, size = wx.Size( 800,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
         self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 
@@ -85,10 +85,13 @@ class AudioDeviceSettingsGUI ( wx.Frame ):
 
         gSizer13.Add( gSizer18, 1, wx.EXPAND, 5 )
 
-        gSizer19 = wx.GridSizer( 0, 0, 0, 0 )
+        gSizer19 = wx.GridSizer( 0, 2, 0, 0 )
 
-        self.wxAcceptButton = wx.Button( self, wx.ID_ANY, u"Start Devices", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.wxAcceptButton = wx.Button( self, wx.ID_ANY, u"Start Devices", wx.DefaultPosition, wx.Size( 200,50 ), 0 )
         gSizer19.Add( self.wxAcceptButton, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+
+        self.m_button12 = wx.Button( self, wx.ID_ANY, u"Kill Devices", wx.DefaultPosition, wx.Size( 200,50 ), 0 )
+        gSizer19.Add( self.m_button12, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 
 
         gSizer13.Add( gSizer19, 1, wx.EXPAND, 5 )
@@ -101,6 +104,7 @@ class AudioDeviceSettingsGUI ( wx.Frame ):
 
         # Connect Events
         self.wxAcceptButton.Bind( wx.EVT_BUTTON, self.onAccept )
+        self.m_button12.Bind( wx.EVT_BUTTON, self.onKillAudioDevices )
 
     def __del__( self ):
         pass
@@ -108,6 +112,9 @@ class AudioDeviceSettingsGUI ( wx.Frame ):
 
     # Virtual event handlers, overide them in your derived class
     def onAccept( self, event ):
+        event.Skip()
+
+    def onKillAudioDevices( self, event ):
         event.Skip()
 
 

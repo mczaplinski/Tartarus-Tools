@@ -17,7 +17,7 @@ import wx.xrc
 class LibRecorderGUI ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Shurrikane Sample Library Recorder", pos = wx.DefaultPosition, size = wx.Size( 1400,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.RESIZE_BORDER|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Tartarus Tools - Sample Library Recorder", pos = wx.DefaultPosition, size = wx.Size( 1400,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.RESIZE_BORDER|wx.TAB_TRAVERSAL )
 
         self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
         self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
@@ -64,11 +64,12 @@ class LibRecorderGUI ( wx.Frame ):
         self.wxSamplePrefix = wx.TextCtrl( self, wx.ID_ANY, u"MyLibStacc", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxSamplePrefix, 0, wx.ALL, 5 )
 
-        self.wxSaveButton = wx.Button( self, wx.ID_ANY, u"Accept changes and start Device", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxSaveButton = wx.Button( self, wx.ID_ANY, u"Accept changes", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer6.Add( self.wxSaveButton, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
         self.wxRecordButton = wx.Button( self, wx.ID_ANY, u"Start Recording", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
-        self.wxRecordButton.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_ACTIVECAPTION ) )
+        self.wxRecordButton.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
+        self.wxRecordButton.SetBackgroundColour( wx.Colour( 223, 223, 223 ) )
 
         gSizer6.Add( self.wxRecordButton, 0, wx.ALL, 5 )
 
@@ -177,7 +178,7 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer9.Add( self.m_staticText13, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
-        self.wxVelSteps = wx.TextCtrl( self, wx.ID_ANY, u"[30,90,127]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxVelSteps = wx.TextCtrl( self, wx.ID_ANY, u"[127]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer9.Add( self.wxVelSteps, 0, wx.ALL, 5 )
 
         self.m_staticText14 = wx.StaticText( self, wx.ID_ANY, u"Velocity Ranges (Kontakt assignments)", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -186,7 +187,7 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer9.Add( self.m_staticText14, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
-        self.wxVelRanges = wx.TextCtrl( self, wx.ID_ANY, u"[[0,45],[46,90],[91,127]]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxVelRanges = wx.TextCtrl( self, wx.ID_ANY, u"[[0,27]]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer9.Add( self.wxVelRanges, 0, wx.ALL, 5 )
 
         self.m_staticText241 = wx.StaticText( self, wx.ID_ANY, u"Mod Wheel Steps", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -195,7 +196,7 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer9.Add( self.m_staticText241, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
-        self.wxMWSteps = wx.TextCtrl( self, wx.ID_ANY, u"[30, 127]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxMWSteps = wx.TextCtrl( self, wx.ID_ANY, u"[127]", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer9.Add( self.wxMWSteps, 0, wx.ALL, 5 )
 
         self.m_staticText25 = wx.StaticText( self, wx.ID_ANY, u"Num Round Robins", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -204,7 +205,7 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer9.Add( self.m_staticText25, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 
-        self.wxNumRRs = wx.TextCtrl( self, wx.ID_ANY, u"3", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+        self.wxNumRRs = wx.TextCtrl( self, wx.ID_ANY, u"2", wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
         gSizer9.Add( self.wxNumRRs, 0, wx.ALL, 5 )
 
 
@@ -212,11 +213,19 @@ class LibRecorderGUI ( wx.Frame ):
 
         gSizer10 = wx.GridSizer( 5, 2, 0, 0 )
 
+        gSizer19 = wx.GridSizer( 0, 2, 0, 0 )
+
+        self.wxTuningTarget = wx.CheckBox( self, wx.ID_ANY, u"VSTi Tuning Target", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+        gSizer19.Add( self.wxTuningTarget, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+
         self.wxVSTiName = wx.StaticText( self, wx.ID_ANY, u"VSTi DLL", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.wxVSTiName.Wrap( -1 )
         self.wxVSTiName.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
 
-        gSizer10.Add( self.wxVSTiName, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+        gSizer19.Add( self.wxVSTiName, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+
+        gSizer10.Add( gSizer19, 1, wx.EXPAND, 5 )
 
         gSizer12 = wx.GridSizer( 0, 4, 0, 0 )
 
@@ -439,6 +448,7 @@ class LibRecorderGUI ( wx.Frame ):
         self.wxSamplerate.Bind( wx.EVT_CHOICE, self.onSamplerateChange )
         self.wxBlocksize.Bind( wx.EVT_CHOICE, self.onBlockSizeChange )
         self.wxInputMode.Bind( wx.EVT_CHOICE, self.onInputeModeChange )
+        self.wxTuningTarget.Bind( wx.EVT_CHECKBOX, self.onVSTiTuningTargetChange )
         self.wxVSTiPath.Bind( wx.EVT_FILEPICKER_CHANGED, self.onVSTiBrowse )
         self.wxVSTiOpenButton.Bind( wx.EVT_BUTTON, self.open_VST_instrument )
         self.wxVst1Path.Bind( wx.EVT_FILEPICKER_CHANGED, self.onVST1Browse )
@@ -479,6 +489,9 @@ class LibRecorderGUI ( wx.Frame ):
         event.Skip()
 
     def onInputeModeChange( self, event ):
+        event.Skip()
+
+    def onVSTiTuningTargetChange( self, event ):
         event.Skip()
 
     def onVSTiBrowse( self, event ):

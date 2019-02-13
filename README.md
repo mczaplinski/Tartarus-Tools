@@ -27,6 +27,7 @@ Then install all requirements and dependencies:
 $ cd $my_work_dir
 $ pip install --upgrade -r requirements.txt
 ``` 
+You may also want to update PyAudio to ASIO version with the script in etc\.
 Finally, start jupyter notebook (if you want to open the *.ipynb files):
 ```bash
 $ jupyter notebook

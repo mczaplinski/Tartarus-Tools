@@ -7,8 +7,10 @@ import scipy.signal
 import pyaudio
 import resampy
 import wx
+import wx.adv
 import os
 import sys
+import time
 import traceback
 import logging
 import wave
@@ -402,7 +404,7 @@ def closePYA(PYA):
     PYA.terminate()
 
 def getOutputStream(PYA, output_device_id, numChannels, samplerate):
-    output_stream = PYA.open(format=pyaudio.paFloat32,
+    output_stream = PYA.open(format=pyaudio.paInt16,  # pyaudio.paFloat32,
                              channels=numChannels,
                              rate=samplerate,
                              output=True,
@@ -413,13 +415,14 @@ def getOutputStream(PYA, output_device_id, numChannels, samplerate):
 def closeOutputStream(output_stream):
     output_stream.close()
     
-def getInputStream(PYA, input_device_id, numChannels, samplerate, blocksize):
+def getStream(PYA, input_device_id, numChannels, samplerate, blocksize, isInput=True, isOutput=False):
     try:
         input_stream = PYA.open(
-            format=pyaudio.paInt16, #we record in int and convert it later to float because the resulting byte stream is broken af. idk man
+            format=pyaudio.paInt16, #we record in int and convert it later to float because a resulting float byte stream is broken af. idk man
             channels=numChannels,
             rate=samplerate,
-            input=True,
+            input=isInput,
+            output=isOutput,
             frames_per_buffer=blocksize,
             input_device_index=input_device_id,
             start=False
@@ -435,9 +438,20 @@ def closeInputStream(input_stream):
     input_stream.close()
     
 def playAudio(np_audio, output_stream=None, output_device_id=0, numChannels=2, samplerate=44100):    
-    # Assuming you have a numpy array called np_audio
+    # Assuming you have a numpy array
+    if isMono(np_audio.T):
+        np_audio = np.array([np_audio, np_audio]) #copy over
+    if not np_audio.T.shape[1] == 2: # should be stereo at this point
+        raise Exception("Is not Mono or Stereo. Can't play")
+        
+    olddatatype = np_audio.dtype
+    if olddatatype == np.float32:
+        np_audio_int16_L = convert_float_to_other_type(np_audio[0], "int16")
+        np_audio_int16_R = convert_float_to_other_type(np_audio[1], "int16")
+        np_audio = np.array([np_audio_int16_L, np_audio_int16_R])
+    
     np_audio = np_audio.T #transform to other notation
-    bytedata = np_audio.astype(np.float32).tostring()
+    bytedata = np_audio.astype(np.int16).tostring()
     if output_stream is None:
         PYA = openPYA()
         output_stream = getOutputStream(PYA, output_device_id, numChannels, samplerate)
@@ -485,23 +499,13 @@ def recordAudio(duration, input_stream=None, input_device_id=0, numChannels=2, s
         result_float = np.zeros(result.shape, dtype = numpy.float32);
         for i in range(0,result.shape[1]):
             result_float[:,i] = convert_to_float(result[:,i], destination_type=numpy.float32)[0]
-        #result_float = np.array(result_float)
-        #result_float = result_float.reshape(result_float.shape,order='A')
-        
-        #TODO find a fany solution for any amount of channels. indexing gets weird. somehow result_float[1] doesn't results in first channel like the loaded .wav files or the VSTi samples did.... wtf numpy
-        #if numChannels == 2:
-        #    return np.array([result_float[:,0], result_float[:,1]])
-        #if numChannels == 3:
-        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2]])
-        #if numChannels == 4:
-        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3]])
-        #if numChannels == 5:
-        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3], result_float[:,4]])
-        #if numChannels == 6:
-        #    return np.array([result_float[:,0], result_float[:,1], result_float[:,2], result_float[:,3], result_float[:,4], result_float[:,5]])
     print("done...")
     return result_float.T #transpose to numpy notation
 
+
+
+#Some buggy shit or archived functions:
+#
 #def play_wav_file(filepath, block_size):
 #    PYA = pyaudio.PyAudio()
 #    wf = wave.open(filepath, 'rb') #read mode
@@ -516,9 +520,6 @@ def recordAudio(duration, input_stream=None, input_device_id=0, numChannels=2, s
 #    stream.stop_stream()
 #    stream.close()
 #    PYA.terminate()
-
-
-
 #def zeroTrimStereoSample(dataL, dataR, trimFront = False, trimBack = True):
 #    assertIsMono(dataL)
 #    assertIsMono(dataR)
