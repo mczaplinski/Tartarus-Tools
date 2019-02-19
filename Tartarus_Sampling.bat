@@ -1,0 +1,1 @@
+my_venv\Scripts\activate && python Tartarus_Sampling.py

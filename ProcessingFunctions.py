@@ -371,11 +371,16 @@ def gateStereoSample(dataL, dataR, trimFront=False, trimBehind=True, onThreshold
     if trimBehind == True:
         OffthreshLogLIdx = np.where(logL>offThreshold)
         OffthreshLogRIdx = np.where(logR>offThreshold)
-        lastThreshL  = OffthreshLogLIdx[0][-1]
-        lastThreshR  = OffthreshLogRIdx[0][-1]
-        lastThresh = max(lastThreshL,lastThreshR)
-        dataL = dataL[:lastThresh]
-        dataR = dataR[:lastThresh]
+        try:
+            lastThreshL  = OffthreshLogLIdx[0][-1]
+            lastThreshR  = OffthreshLogRIdx[0][-1]
+            lastThresh = max(lastThreshL,lastThreshR)
+            dataL = dataL[:lastThresh]
+            dataR = dataR[:lastThresh]
+        except IndexError:
+            print("WARNING Couldn't gate sample")
+            print(OffthreshLogLIdx)
+            print(OffthreshLogRIdx)
     return dataL,dataR
 
 def limitSample(mono_data, valdB=-0.1): #valdB = limit in dB
