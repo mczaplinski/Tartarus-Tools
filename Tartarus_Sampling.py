@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # TARTARUS TOOLS
+#  Exported from Tartarus_Sampling.ipynb. Don't edit Tartarus_Sampling.py
+
 # ### TODO/Ideas
 # 
 # - Save all variables to save file when start recording
@@ -28,6 +31,8 @@
 from ProcessingFunctions import *
 import guis.lib_recorder_gui
 import guis.audio_settings_gui
+import time
+import rtmidi
 
 module = sys.modules[__name__] #current module to save global parameters
 WX_APP = initWx() # This will run wx.App() - Only to be run once (in Jupyter)
@@ -121,6 +126,12 @@ module.eval_a3 = False
 module.eval_b3 = False
 module.eval_a4 = False
 
+module.midiout = rtmidi.MidiOut()
+available_ports = module.midiout.get_ports()
+
+print("Available MIDI Ports")
+print(available_ports)
+
 
 # In[2]:
 
@@ -204,7 +215,9 @@ def assert_all_important_vars_are_set():
         print("Merge evaluations")
         module.evaluation = module.eval_a and module.eval_b and module.eval_c and module.eval_d and module.eval_e and module.eval_f and module.eval_g and module.eval_h
         module.evaluation = module.evaluation and module.eval_i and module.eval_j and module.eval_k and module.eval_l
-            
+        
+        print(module.evaluation)
+        
         print("Input mode switch")
         if module.INPUT_MODE == INPUT_TYPE.VSTI:
             print("Type: VSTi specific config")
@@ -213,6 +226,7 @@ def assert_all_important_vars_are_set():
             module.eval_c2 = type(module.MIDI_IN_DEVICE_ID) == int and module.MIDI_IN_DEVICE_ID >= 0
             print("Merge evaluations")
             module.evaluation = module.evaluation and module.eval_a2 and module.eval_b2
+            print(module.evaluation)
 
         if module.INPUT_MODE == INPUT_TYPE.LIVE_REC:
             print("Type: Live_Rec specific config")
@@ -221,15 +235,21 @@ def assert_all_important_vars_are_set():
             print("Merge evaluations")
             module.evaluation = module.evaluation and module.eval_a3 and module.eval_b3
             module.evaluation = module.evaluation and module.AUDIO_INPUT_READY
+            print(module.evaluation)
             
         if module.INPUT_MODE == INPUT_TYPE.MIDI_REC:
             print("Type: Midi_Rec specific config")
+            module.eval_a3 = type(module.PRE_START) == float and module.PRE_START >= 0.0
+            module.eval_b3 = (type(module.ON_THRESHOLD) == float or type(module.ON_THRESHOLD) == int) and module.ON_THRESHOLD <= 0 
             module.eval_a4 = type(module.MIDI_OUT_DEVICE_ID) == int and module.MIDI_OUT_DEVICE_ID >= 0
             print("Merge evaluations")
-            module.evaluation = module.evaluation and module.eval_a3
+            module.evaluation = module.evaluation and module.eval_a3 and module.eval_b3
+            module.evaluation = module.evaluation and module.eval_a4
             module.evaluation = module.evaluation and module.AUDIO_INPUT_READY
+            print(module.evaluation)
         
         module.evaluation = module.evaluation and module.AUDIO_OUTPUT_READY
+        print(module.evaluation)
         
         print("Evaluations successful")
         return module.evaluation
@@ -293,6 +313,11 @@ def startSampling(libRecordFrame):
     if module.USE_VSTI_AS_TUNER or module.INPUT_MODE == INPUT_TYPE.VSTI:
         nextMidiInstrumentRecording(next(iter(sub_midi_dict.values())), module.VELOCITY_STEPS[-1], module.MOD_WHEEL_STEPS[-1], rr=0, postprocess = False) #do something
     
+    if module.INPUT_MODE == INPUT_TYPE.MIDI_REC:
+        print("setting up midi out device")
+        module.midiout = rtmidi.MidiOut()
+        module.midiout.open_port(module.MIDI_OUT_DEVICE_ID)
+    
     for key_name, key_value in sub_midi_dict.items():
     #e.g.: key_name,key_value = G2, 55 ...
         for velocity in module.VELOCITY_STEPS:
@@ -309,6 +334,7 @@ def startSampling(libRecordFrame):
                             playAudio(tunerData,module.AUDIO_OUTPUT_STREAM)
                         else:
                             print("Couldn't gather samples from tuner VSTi")
+                        
                     
                     for rr in range(1,module.ROUND_ROBINS+1):
                         libRecordFrame.updateNoteValues(key_name, str(velocity), str(rr), str(mw))
@@ -388,8 +414,21 @@ def nextLiveRecording(key_value, velocity, mw, rr):
     
 def nextMidiOutRecording(key_value, velocity, mw, rr):
     print("SEND MIDI VALUE THROUGH MIDI PORT")
-    #return nextLiveRecording(key_value, velocity, mw, rr) #await response
-    return
+    sampleDuration = module.PRE_START + module.SAMPLE_DURATION
+    note_on = [0x90, key_value, velocity]
+    note_off = [0x80, key_value, velocity]
+    module.midiout.send_message(note_on)
+    
+    dry_recording = recordAudio(sampleDuration,module.AUDIO_INPUT_STREAM)
+    
+    if isNonZero(dry_recording[0]) == False and  isNonZero(dry_recording[1]) == False:
+        module.midiout.send_message(note_off)
+        return None #This is wrong/missing data. We set it to zero so it's easier to detect in the upper layer
+    
+    time.sleep(sampleDuration)
+    midiout.send_message(note_off)
+    
+    return dry_recording
     
 def gatherInputData(key_value, velocity, mw, rr):
     if module.INPUT_MODE == INPUT_TYPE.VSTI:
@@ -984,4 +1023,10 @@ frame = LibRecordFrame(None)
 frame.Show(True)
 #Let's run this thing :)
 WX_APP.MainLoop()
+
+
+# In[ ]:
+
+
+
 

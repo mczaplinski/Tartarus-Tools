@@ -14,6 +14,8 @@ import time
 import traceback
 import logging
 import wave
+import matplotlib
+matplotlib.use('agg') #don't use tkinter which is sometimes missing in python on windows..
 import matplotlib.pyplot as plt
 
 #some weird legacy libraries
@@ -37,6 +39,7 @@ MIDI_KEY = {
 WX_APP = 0
 WX_IS_INIT = False
 logger = logging.Logger('catch_all')
+
 
 def initWx():
     WX_APP = wx.App()
