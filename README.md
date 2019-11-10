@@ -35,7 +35,3 @@ $ jupyter notebook
 start_notebook.bat
 ```
 You can also just edit and run the scripts you need. Be sure to do this while the virtual environment is active.
-
-
-# License notice:
-All rights reserved. (c) Two Steps From Tartarus 2019
